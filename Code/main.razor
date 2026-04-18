@@ -1,0 +1,607 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System;
+@using System.Linq;
+@using System.Collections.Generic;
+@using System.Threading.Tasks;
+@inherits PanelComponent
+
+<style>
+    .game-root {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        font-family: sans-serif;
+        color: white;
+        background-color: #1a1a1a;
+        pointer-events: all;
+    }
+
+    /* ЛІВА ПАНЕЛЬ (Магазин та Апгрейди) */
+    .sidebar {
+        width: 30%;
+        min-width: 350px;
+        max-width: 450px;
+        background-color: rgba(40, 40, 40, 0.95);
+        border-right: 2px solid #555;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        z-index: 5;
+        overflow-y: auto; /* Додано скрол, щоб помістилися і білети, і апгрейди */
+    }
+
+    /* Блок з грошима */
+    .stats-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .money-icon {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+
+    /* Контейнери секцій */
+    .shop-container, .upgrades-container {
+        border: 2px solid #555;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background-color: rgba(20, 20, 20, 0.5);
+        flex-shrink: 0;
+    }
+
+    .shop-title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-bottom: 2px solid #444;
+        padding-bottom: 10px;
+        margin-bottom: 5px;
+    }
+
+    .shop-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .shop-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 2px solid #444;
+        border-radius: 6px;
+        padding: 12px;
+        background-color: rgba(60, 60, 60, 0.8);
+        gap: 10px;
+    }
+
+    .item-info {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding-right: 15px;
+    }
+
+    .item-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .item-desc {
+        font-size: 14px;
+        color: #ccc;
+        margin-top: 6px;
+        white-space: normal;
+    }
+
+    /* Кнопки (універсальні) */
+    .buy-btn, .click-btn {
+        background-image: url('/ui/button.png');
+        background-size: 100% 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.05s ease-in-out;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        flex-shrink: 0;
+    }
+
+    .click-btn {
+        width: 100%;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .buy-btn {
+        width: 110px;
+        height: 55px;
+        font-size: 20px;
+    }
+
+        .buy-btn:active, .click-btn:active {
+            transform: scale(0.95);
+        }
+
+        .buy-btn.disabled {
+            filter: grayscale(100%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+    /* ЦЕНТРАЛЬНА ПАНЕЛЬ (Ігровий стіл) */
+    .main-area {
+        flex-grow: 1;
+        position: relative;
+        background-image: url('/ui/background.png');
+        background-repeat: repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .no-ticket-text {
+        font-size: 32px;
+        color: rgba(255,255,255,0.3);
+        font-weight: 900;
+        text-transform: uppercase;
+        border: 4px dashed rgba(255,255,255,0.2);
+        padding: 30px 60px;
+        border-radius: 16px;
+    }
+
+    /* Логіка білетів на столі */
+    .table-ticket {
+        position: absolute;
+        width: 152px;
+        height: 208px;
+        background-image: url('/ui/tickets/1.png');
+        background-size: 100% 100%;
+        cursor: pointer;
+        transition: transform 0.2s, filter 0.2s;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+        display: flex;
+        justify-content: center;
+    }
+
+        .table-ticket:hover {
+            filter: brightness(1.2);
+            z-index: 10 !important;
+        }
+
+    /* ПРАВА ПАНЕЛЬ (Історія та Лідерборд) */
+    .right-sidebar {
+        width: 25%;
+        min-width: 250px;
+        max-width: 350px;
+        background-color: rgba(40, 40, 40, 0.95);
+        border-left: 2px solid #555;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px; /* Додано відступ між лідербордом та історією */
+        z-index: 5;
+    }
+
+    .history-log {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        overflow-y: auto;
+    }
+
+    .history-win {
+        color: #4CAF50;
+    }
+
+    .history-loss {
+        color: #f44336;
+    }
+
+    .history-buy {
+        color: #ff9800;
+    }
+    /* Колір для покупок апгрейдів */
+
+    /* МОДАЛЬНЕ ВІКНО */
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0,0,0,0.85);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        display: flex;
+        flex-direction: row;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .ticket-legend {
+        background-color: #222;
+        padding: 30px;
+        border-radius: 16px;
+        border: 2px solid #555;
+        max-width: 300px;
+        color: #eee;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .legend-title {
+        font-size: 24px;
+        font-weight: 900;
+        color: #ff9800;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .legend-desc {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        font-weight: bold;
+    }
+
+        .legend-item img {
+            width: 32px;
+            height: 32px;
+            object-fit: fill;
+        }
+
+    .close-btn {
+        margin-top: 20px;
+        background-color: #f44336;
+        border-radius: 8px;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        padding: 12px;
+        cursor: pointer;
+        transition: transform 0.05s;
+    }
+
+        .close-btn:active {
+            transform: scale(0.95);
+        }
+</style>
+
+<root class="game-root">
+
+    <div class="sidebar">
+
+        <div class="stats-row">
+            <img class="money-icon" src="/ui/coin.png" alt="Money" />
+            <div class="money-counter">$ @Money</div>
+        </div>
+
+        <div class="click-btn" onclick=@(() => EarnMoney())>
+            CLICK
+        </div>
+
+        <div class="shop-container">
+            <div class="shop-title">SHOP</div>
+
+            <div class="shop-list">
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">ONE LUCKY TICKET</div>
+                        <div class="item-desc">Basic ticket just for fun</div>
+                    </div>
+                    <div class="buy-btn @(Money < BasicTicketCost ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(BasicTicketCost, "БРОНЗА", 200, 0.4f))>
+                        $ @BasicTicketCost
+                    </div>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">TICKET 67</div>
+                        <div class="item-desc">Brainrot edition, funded by tun tun sahur </div>
+                    </div>
+                    <div class="buy-btn @(Money < 50 ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(50, "СРІБЛО", 1000, 0.3f))>
+                        $ 50
+                    </div>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">GAMBLERS PARADISE</div>
+                        <div class="item-desc">ALL OT NOTHING!!!!</div>
+                    </div>
+                    <div class="buy-btn @(Money < 200 ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(200, "ЗОЛОТО", 5000, 0.2f))>
+                        $ 200
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upgrades-container">
+            <div class="shop-title">Upgrades</div>
+
+            <div class="shop-list">
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">Income</div>
+                        <div class="item-desc">x2 reward from clicks</div>
+                    </div>
+                    <div class="buy-btn @(Money < 150 ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("Авто-стирач", 150))>
+                        $ 150
+                    </div>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">Autoclicker</div>
+                        <div class="item-desc">-10% time between autoclicks</div>
+                    </div>
+                    <div class="buy-btn @(Money < 300 ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("Талісман", 300))>
+                        $ 300
+                    </div>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">VIP</div>
+                        <div class="item-desc">VIP ticket</div>
+                    </div>
+                    <div class="buy-btn @(Money < 1000 ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("VIP Статус", 1000))>
+                        $ 1000
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="main-area">
+        @foreach (var ticket in TicketsOnTable)
+        {
+            <div class="table-ticket"
+                 style="left: @(ticket.X)px; top: @(ticket.Y)px; transform: rotate(@(ticket.Rotation)deg) translate(-50%, -50%); z-index: @(ticket.ZIndex);"
+                 onclick=@(() => OpenTicket(ticket))>
+            </div>
+        }
+
+        @if (OpenedTicket != null)
+        {
+            <div class="modal-overlay">
+                <div class="modal-content">
+
+                    <div class="ticket-legend">
+                        <div class="legend-title">RULES</div>
+                        <div class="legend-desc">Get 3 same pictures, to hit a jackpot!</div>
+
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <div class="legend-item"><img src="/ui/tickets/symbols/chest.png" /> <span>~25%</span></div>
+                            <div class="legend-item"><img src="/ui/tickets/symbols/energy.png" /> <span>~25%</span></div>
+                            <div class="legend-item"><img src="/ui/tickets/symbols/message.png" /> <span>~15%</span></div>
+                            <div class="legend-item"><img src="/ui/tickets/symbols/skull.png" /> <span>~15%</span></div>
+                            <div class="legend-item"><img src="/ui/tickets/symbols/gift.png" /> <span>~10%</span></div>
+                            <div class="legend-item"><img src="/ui/tickets/symbols/Action!.png" /> <span>~5%</span></div>
+                            <div class="legend-item"><img src="/ui/tickets/symbols/lottery circle.png" /> <span>~5%</span></div>
+                        </div>
+
+                        <div class="close-btn" onclick=@CloseTicket>Close</div>
+                    </div>
+
+                    <ScratchTicket PrizeAmount="@OpenedTicket.Prize"
+                                   TicketTier="@OpenedTicket.Tier"
+                                   OnComplete="@(new Action<int>(OnTicketScratched))" />
+                </div>
+            </div>
+        }
+        else if (TicketsOnTable.Count == 0)
+        {
+            <div class="no-ticket-text">Buy a Ticket</div>
+        }
+    </div>
+
+    <div class="right-sidebar">
+
+        <div class="shop-container" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="shop-title">Leaderboard</div>
+            <div class="history-log" style="padding-right: 5px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
+                    <span style="color: #ff9800; font-size: 18px;">1. PlayerOne</span>
+                    <span class="history-win" style="font-size: 18px;">$ 99,999</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
+                    <span style="color: #ccc; font-size: 16px;">2. Facepuncher</span>
+                    <span class="history-win" style="font-size: 16px;">$ 50,000</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
+                    <span style="color: #cd7f32; font-size: 16px;">3. DevMaster</span>
+                    <span class="history-win" style="font-size: 16px;">$ 15,200</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
+                    <span style="color: #888;">4. Garry</span>
+                    <span class="history-win" style="color: #888;">$ 5,000</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
+                    <span style="color: #888;">5. You</span>
+                    <span class="history-win" style="color: #888;">$ @Money</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="shop-container" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 0;">
+            <div class="shop-title">History</div>
+            <div class="history-log" style="padding-right: 5px;">
+                @foreach (var log in TicketHistory.AsEnumerable().Reverse().Take(15))
+                {
+                    <div class="@(log.Amount > 0 ? "history-win" : (log.Amount < 0 ? "history-buy" : "history-loss"))">
+                        @log.Message
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+</root>
+
+@code
+{
+    public class ActiveTicket
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Rotation { get; set; }
+        public int ZIndex { get; set; }
+        public int Prize { get; set; }
+        public string Tier { get; set; }
+    }
+
+    public class HistoryEntry
+    {
+        public string Message { get; set; }
+        public int Amount { get; set; }
+    }
+
+    [Property] public int Money { get; set; } = 100;
+
+    public int BasicTicketCost = 10;
+    public List<ActiveTicket> TicketsOnTable { get; set; } = new();
+    public ActiveTicket OpenedTicket { get; set; }
+    public List<HistoryEntry> TicketHistory { get; set; } = new();
+    private int ticketZCounter = 1;
+
+    public void EarnMoney()
+    {
+        Money += 5;
+    }
+
+    public void BuyTicket(int cost, string tier, int maxPrize, float winChance)
+    {
+        if (Money >= cost)
+        {
+            Money -= cost;
+
+            bool isWin = System.Random.Shared.NextSingle() <= winChance;
+            int prize = isWin ? System.Random.Shared.Next(cost * 2, maxPrize + 1) : 0;
+
+            ticketZCounter++;
+
+            // Generate spawn position
+            float tx = 150 + System.Random.Shared.Next(0, 300);
+            float ty = 150 + System.Random.Shared.Next(0, 300);
+            float trot = System.Random.Shared.Next(-35, 35);
+
+            TicketsOnTable.Add(new ActiveTicket
+            {
+                Prize = prize,
+                Tier = tier,
+                X = tx,
+                Y = ty,
+                Rotation = trot,
+                ZIndex = ticketZCounter
+            });
+        }
+    }
+
+    // Метод для покупки покращень
+    public void BuyUpgrade(string upgradeName, int cost)
+    {
+        if (Money >= cost)
+        {
+            Money -= cost;
+
+            TicketHistory.Add(new HistoryEntry
+            {
+                Amount = -cost, // Від'ємне значення, щоб в історії відображалось іншим кольором
+                Message = $"Bought: {upgradeName}"
+            });
+
+            // Тут в майбутньому можна буде додати логіку активації апгрейду
+            // наприклад: if(upgradeName == "Авто-стирач") HasAutoScratcher = true;
+        }
+    }
+
+    public void OpenTicket(ActiveTicket ticket)
+    {
+        ticketZCounter++;
+        ticket.ZIndex = ticketZCounter;
+        OpenedTicket = ticket;
+    }
+
+    public void CloseTicket()
+    {
+        OpenedTicket = null;
+    }
+
+    public void OnTicketScratched(int winAmount)
+    {
+        Money += winAmount;
+
+        TicketHistory.Add(new HistoryEntry
+        {
+            Amount = winAmount,
+            Message = winAmount > 0 ? $"Win: ${winAmount}" : "You lost..."
+        });
+
+        _ = DestroyTicketAfterDelay();
+    }
+
+    private async Task DestroyTicketAfterDelay()
+    {
+        try
+        {
+            await GameTask.DelaySeconds(2.0f);
+            if (!IsValid) return;
+
+            if (OpenedTicket != null)
+            {
+                TicketsOnTable.Remove(OpenedTicket);
+                OpenedTicket = null;
+            }
+            StateHasChanged();
+        }
+        catch (System.Exception)
+        {
+            // Ignore if task is cancelled
+        }
+    }
+
+    protected override int BuildHash() => System.HashCode.Combine(Money, TicketsOnTable.Count, OpenedTicket != null, TicketHistory.Count);
+}

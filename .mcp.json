@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "editor": { 
+      "type": "sse", 
+      "url": "http://localhost:8098/sse" 
+    },
+    "api": { 
+      "command": "node", 
+      "args": ["D:/SteamLibrary/steamapps/common/sbox/samples/lottery/arenula-mcp-master/api/dist/index.js"],
+      "env": {
+        "SBOX_API_URL": "https://cdn.sbox.game/releases/2026-04-17-09-05-09.zip.json"
+      }
+    },
+    "docs": { 
+      "command": "node", 
+      "args": ["D:/SteamLibrary/steamapps/common/sbox/samples/lottery/arenula-mcp-master/docs/dist/index.js"] 
+    }
+  }
+}
