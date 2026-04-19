@@ -7,30 +7,20 @@
 
 <style>
     .ticket-wrapper {
-        width: 380px;
-        height: 520px;
-        background-image: url('/ui/tickets/1.png');
         background-size: 100% 100%;
-        border-radius: 16px;
         position: relative;
         color: #fff;
         text-align: center;
         box-shadow: 0 16px 32px rgba(0,0,0,0.6);
-        /* overflow: hidden; — ВИДАЛЕНО, щоб плашка могла виступати за межі білета вгору */
         cursor: default;
     }
 
     .symbols-grid {
         display: flex;
         flex-wrap: nowrap;
-        gap: 0;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
         position: absolute;
-        top: 350px;
-        left: 56px;
-        width: 259px;
-        height: 86px;
         z-index: 1;
         pointer-events: none;
     }
@@ -38,10 +28,6 @@
     .symbol-box {
         flex: 1;
         height: 100%;
-        background-image: url('/ui/basic_gui_bundle/BoxesBanners/Box_Blank_Square.png');
-        background-size: 100% 100%;
-        background-repeat: no-repeat;
-        border-radius: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -68,8 +54,8 @@
 
     .scratch-cell {
         position: absolute;
-        background-color: #8D918D; /* Новый цвет заливки (темно-серый) вместо картинки */
-        border: 1px solid #808080; /* Небольшая граница для вида сетки (можно убрать) */
+        background-color: #8D918D;
+        border: 1px solid #808080;
         opacity: 1;
         transition: opacity 0.05s ease;
     }
@@ -80,11 +66,9 @@
 
     .result-banner {
         position: absolute;
-        /* Відштовхуємо від верхнього краю білета вгору */
         bottom: 100%;
         left: 50%;
-        margin-bottom: 20px; /* Відступ між білетом та плашкою */
-        /* Змінено transform для правильного масштабування на новій позиції */
+        margin-bottom: 20px;
         transform: translateX(-50%) scale(0);
         background-image: url('/ui/basic_gui_bundle/BoxesBanners/Banner_Green.png');
         background-size: 100% 100%;
@@ -114,13 +98,17 @@
     }
 </style>
 
-<root class="ticket-wrapper" onmousedown=@OnMouseDown onmouseup=@OnMouseUp onmousemove=@OnMouseMove onmouseleave=@OnMouseLeave>
-    <div class="symbols-grid">
-        @foreach (var symPath in Symbols)
-        {
-            <div class="symbol-box"><img src="@symPath" /></div>
-        }
-    </div>
+<root class="ticket-wrapper" style="width: @(Config?.TicketW ?? 380)px; height: @(Config?.TicketH ?? 520)px; background-image: url('@Config?.BgImage');" onmousedown=@OnMouseDown onmouseup=@OnMouseUp onmousemove=@OnMouseMove onmouseleave=@OnMouseLeave>
+
+    @if (Config != null)
+    {
+        <div class="symbols-grid" style="top: @(Config.SymY)px; left: @(Config.SymX)px; width: @(Config.SymW)px; height: @(Config.SymH)px; gap: @(Config.SymGap)px;">
+            @foreach (var symPath in Symbols)
+            {
+                <div class="symbol-box"><img src="@symPath" /></div>
+            }
+        </div>
+    }
 
     <div class="scratch-grid">
         @foreach (var cell in Cells)
@@ -131,9 +119,9 @@
         }
     </div>
 
-    <div class="result-banner @(isFinished ? "show" : "") @(PrizeAmount == 0 ? "loss" : "")">
+    <div class="result-banner @(isFinished ? "show" : "") @(PrizeAmount == 0m ? "loss" : "")">
         <div class="result-text-main">
-            @(PrizeAmount > 0 ? $"WON ${PrizeAmount}!" : "TRY AGAIN")
+            @(PrizeAmount > 0m ? $"WON ${PrizeAmount.ToString("0.00")}!" : "TRY AGAIN")
         </div>
     </div>
 </root>
@@ -148,53 +136,121 @@
         public bool IsScratched;
     }
 
+    public class TicketLayoutConfig
+    {
+        public string BgImage { get; set; }
+
+        public int TicketW { get; set; }
+        public int TicketH { get; set; }
+
+        public int SymX { get; set; }
+        public int SymY { get; set; }
+        public int SymW { get; set; }
+        public int SymH { get; set; }
+        public int SymGap { get; set; }
+
+        public List<(int x, int y, int w, int h)> ScratchZones { get; set; }
+    }
+
     public List<Cell> Cells { get; set; } = new();
 
-    public string TicketTier { get; set; } = "BRONZE";
-    public int PrizeAmount { get; set; } = 0;
-    public Action<int> OnComplete { get; set; }
+    public string TicketTier { get; set; } = "БРОНЗА";
+    public decimal PrizeAmount { get; set; } = 0m; // Оновлено до decimal
+    public Action<decimal> OnComplete { get; set; } // Оновлено до decimal
     public List<string> Symbols { get; set; } = new();
 
+    TicketLayoutConfig Config;
     bool isFinished = false;
 
-    // =============== НАСТРОЙКИ СТИРАЕМОГО СЛОЯ ===============
-    // Увеличено значение для оптимизации (чем больше - тем меньше блоков отрисовывается в UI)
     public const int CellSize = 6;
-
-    // Радиус стерки (кисти). Чем он больше, тем больший кусок стирается за раз
     const float ScratchBrushRadius = 20f;
-
-    // Размеры и расположение белого "игрового" сектора на картинке билета (координаты X,Y и Ширина,Высота)
-    const int ScratchAreaX = 55;
-    const int ScratchAreaY = 349;
-    const int ScratchAreaWidth = 260;
-    const int ScratchAreaHeight = 85;
-
-    // Корректировка смещения курсора мыши.
-    // Если стирает выше и левее курсора на 15px - ставьте +15.
-    // Можно в любой момент подредактировать эти значения, чтобы стёрка была идеально по центру курсора.
     const float CursorOffsetX = 30f;
-    const float CursorOffsetY = 50f;    // ==========================================================
+    const float CursorOffsetY = 50f;
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        if (Cells.Count == 0)
+
+        if (TicketTier == "СРІБЛО")
         {
-            // Автоматическая генерация нужного количества ячеек для покрытия игрового поля
-            // Сетка кубиков создаётся строго в заданных координатах (по размеру CellSize)
-            for (int r = ScratchAreaY; r < ScratchAreaY + ScratchAreaHeight; r += CellSize)
+            Config = new TicketLayoutConfig
             {
-                for (int c = ScratchAreaX; c < ScratchAreaX + ScratchAreaWidth; c += CellSize)
+                BgImage = "/ui/tickets/2.png",
+
+                TicketW = 600,
+                TicketH = 450,
+
+                SymX = 60,
+                SymY = 285,
+                SymW = 480,
+                SymH = 87,
+                SymGap = 50,
+
+                ScratchZones = new() {
+                    (52, 288, 139, 81),
+                    (228, 288, 139, 81),
+                    (404, 288, 139, 81)
+                }
+            };
+        }
+        else if (TicketTier == "ЗОЛОТО")
+        {
+            Config = new TicketLayoutConfig
+            {
+                BgImage = "/ui/tickets/3.png",
+
+                TicketW = 600,
+                TicketH = 300,
+
+                SymX = 55,
+                SymY = 150,
+                SymW = 260,
+                SymH = 85,
+                SymGap = 10,
+
+                ScratchZones = new() {
+                    (55, 150, 260, 85)
+                }
+            };
+        }
+        else // БРОНЗА
+        {
+            Config = new TicketLayoutConfig
+            {
+                BgImage = "/ui/tickets/1.png",
+
+                TicketW = 380,
+                TicketH = 520,
+
+                SymX = 56,
+                SymY = 350,
+                SymW = 259,
+                SymH = 86,
+                SymGap = 5,
+
+                ScratchZones = new() {
+                    (55, 349, 260, 85)
+                }
+            };
+        }
+
+        if (Cells.Count == 0 && Config != null)
+        {
+            foreach (var zone in Config.ScratchZones)
+            {
+                for (int r = zone.y; r < zone.y + zone.h; r += CellSize)
                 {
-                    Cells.Add(new Cell
+                    for (int c = zone.x; c < zone.x + zone.w; c += CellSize)
                     {
-                        X = c,
-                        Y = r,
-                        CenterX = c + CellSize / 2f,
-                        CenterY = r + CellSize / 2f,
-                        IsScratched = false
-                    });
+                        Cells.Add(new Cell
+                        {
+                            X = c,
+                            Y = r,
+                            CenterX = c + CellSize / 2f,
+                            CenterY = r + CellSize / 2f,
+                            IsScratched = false
+                        });
+                    }
                 }
             }
             GenerateSymbols();
@@ -242,7 +298,7 @@
             "/ui/tickets/symbols/skull.png"
         };
 
-        if (PrizeAmount > 0)
+        if (PrizeAmount > 0m)
         {
             string winSymbol = possible[System.Random.Shared.Next(0, possible.Length)];
             for (int i = 0; i < 3; i++) Symbols.Add(winSymbol);
@@ -266,18 +322,14 @@
 
     void ProcessScratch(Vector2 pos)
     {
-        // Корректируем позицию мыши заданным нами отступом (смещением)
         float targetX = pos.x + CursorOffsetX;
         float targetY = pos.y + CursorOffsetY;
-
-        // Используем заданный в настройках радиус кисти стёрки
         float rSq = ScratchBrushRadius * ScratchBrushRadius;
         bool changed = false;
 
         foreach (var c in Cells)
         {
             if (c.IsScratched) continue;
-            // Проверяем расстояние между мышкой (после корректировки) и центром конкретной ячейки
             float dx = c.CenterX - targetX;
             float dy = c.CenterY - targetY;
             if (dx * dx + dy * dy < rSq)

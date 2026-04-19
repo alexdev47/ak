@@ -129,7 +129,7 @@
           "__guid": "b268e796-23a4-483b-bac8-00fd8dcadfef",
           "__enabled": true,
           "Flags": 0,
-          "Money": 100,
+          "Money": 0,
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
           "OnComponentEnabled": null,

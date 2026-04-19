@@ -18,7 +18,6 @@
         pointer-events: all;
     }
 
-    /* ЛІВА ПАНЕЛЬ (Магазин та Апгрейди) */
     .sidebar {
         width: 30%;
         min-width: 350px;
@@ -30,10 +29,9 @@
         flex-direction: column;
         gap: 25px;
         z-index: 5;
-        overflow-y: auto; /* Додано скрол, щоб помістилися і білети, і апгрейди */
+        overflow-y: auto;
     }
 
-    /* Блок з грошима */
     .stats-row {
         display: flex;
         align-items: center;
@@ -49,7 +47,6 @@
         object-fit: contain;
     }
 
-    /* Контейнери секцій */
     .shop-container, .upgrades-container {
         border: 2px solid #555;
         border-radius: 8px;
@@ -107,7 +104,6 @@
         white-space: normal;
     }
 
-    /* Кнопки (універсальні) */
     .buy-btn, .click-btn {
         background-image: url('/ui/button.png');
         background-size: 100% 100%;
@@ -145,7 +141,6 @@
             pointer-events: none;
         }
 
-    /* ЦЕНТРАЛЬНА ПАНЕЛЬ (Ігровий стіл) */
     .main-area {
         flex-grow: 1;
         position: relative;
@@ -167,12 +162,8 @@
         border-radius: 16px;
     }
 
-    /* Логіка білетів на столі */
     .table-ticket {
         position: absolute;
-        width: 152px;
-        height: 208px;
-        background-image: url('/ui/tickets/1.png');
         background-size: 100% 100%;
         cursor: pointer;
         transition: transform 0.2s, filter 0.2s;
@@ -186,7 +177,6 @@
             z-index: 10 !important;
         }
 
-    /* ПРАВА ПАНЕЛЬ (Історія та Лідерборд) */
     .right-sidebar {
         width: 25%;
         min-width: 250px;
@@ -196,7 +186,7 @@
         padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 20px; /* Додано відступ між лідербордом та історією */
+        gap: 20px;
         z-index: 5;
     }
 
@@ -220,9 +210,7 @@
     .history-buy {
         color: #ff9800;
     }
-    /* Колір для покупок апгрейдів */
 
-    /* МОДАЛЬНЕ ВІКНО */
     .modal-overlay {
         position: absolute;
         top: 0;
@@ -254,6 +242,8 @@
         flex-direction: column;
         gap: 15px;
         box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        position: relative;
+        z-index: 110;
     }
 
     .legend-title {
@@ -307,7 +297,7 @@
 
         <div class="stats-row">
             <img class="money-icon" src="/ui/coin.png" alt="Money" />
-            <div class="money-counter">$ @Money</div>
+            <div class="money-counter">$ @Money.ToString("0.00")</div>
         </div>
 
         <div class="click-btn" onclick=@(() => EarnMoney())>
@@ -324,8 +314,8 @@
                         <div class="item-desc">Basic ticket just for fun</div>
                     </div>
                     <div class="buy-btn @(Money < BasicTicketCost ? "disabled" : "")"
-                         onclick=@(() => BuyTicket(BasicTicketCost, "БРОНЗА", 200, 0.4f))>
-                        $ @BasicTicketCost
+                         onclick=@(() => BuyTicket(BasicTicketCost, "БРОНЗА", 20m, 0.4f))>
+                        $ @BasicTicketCost.ToString("0")
                     </div>
                 </div>
 
@@ -334,9 +324,9 @@
                         <div class="item-title">TICKET 67</div>
                         <div class="item-desc">Brainrot edition, funded by tun tun sahur </div>
                     </div>
-                    <div class="buy-btn @(Money < 50 ? "disabled" : "")"
-                         onclick=@(() => BuyTicket(50, "СРІБЛО", 1000, 0.3f))>
-                        $ 50
+                    <div class="buy-btn @(Money < 10m ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(10m, "СРІБЛО", 200m, 0.3f))>
+                        $ 10
                     </div>
                 </div>
 
@@ -345,9 +335,9 @@
                         <div class="item-title">GAMBLERS PARADISE</div>
                         <div class="item-desc">ALL OT NOTHING!!!!</div>
                     </div>
-                    <div class="buy-btn @(Money < 200 ? "disabled" : "")"
-                         onclick=@(() => BuyTicket(200, "ЗОЛОТО", 5000, 0.2f))>
-                        $ 200
+                    <div class="buy-btn @(Money < 50m ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(50m, "ЗОЛОТО", 1000m, 0.2f))>
+                        $ 50
                     </div>
                 </div>
             </div>
@@ -362,9 +352,9 @@
                         <div class="item-title">Income</div>
                         <div class="item-desc">x2 reward from clicks</div>
                     </div>
-                    <div class="buy-btn @(Money < 150 ? "disabled" : "")"
-                         onclick=@(() => BuyUpgrade("Авто-стирач", 150))>
-                        $ 150
+                    <div class="buy-btn @(Money < 15m ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("Income", 15m))>
+                        $ 15
                     </div>
                 </div>
 
@@ -373,9 +363,9 @@
                         <div class="item-title">Autoclicker</div>
                         <div class="item-desc">-10% time between autoclicks</div>
                     </div>
-                    <div class="buy-btn @(Money < 300 ? "disabled" : "")"
-                         onclick=@(() => BuyUpgrade("Талісман", 300))>
-                        $ 300
+                    <div class="buy-btn @(Money < 30m ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("Autoclicker", 30m))>
+                        $ 30
                     </div>
                 </div>
 
@@ -384,9 +374,9 @@
                         <div class="item-title">VIP</div>
                         <div class="item-desc">VIP ticket</div>
                     </div>
-                    <div class="buy-btn @(Money < 1000 ? "disabled" : "")"
-                         onclick=@(() => BuyUpgrade("VIP Статус", 1000))>
-                        $ 1000
+                    <div class="buy-btn @(Money < 100m ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("VIP", 100m))>
+                        $ 100
                     </div>
                 </div>
             </div>
@@ -398,7 +388,7 @@
         @foreach (var ticket in TicketsOnTable)
         {
             <div class="table-ticket"
-                 style="left: @(ticket.X)px; top: @(ticket.Y)px; transform: rotate(@(ticket.Rotation)deg) translate(-50%, -50%); z-index: @(ticket.ZIndex);"
+                 style="width: @(ticket.Width)px; height: @(ticket.Height)px; background-image: url('@GetTicketImage(ticket.Tier)'); left: @(ticket.X)px; top: @(ticket.Y)px; transform: rotate(@(ticket.Rotation)deg) translate(-50%, -50%); z-index: @(ticket.ZIndex);"
                  onclick=@(() => OpenTicket(ticket))>
             </div>
         }
@@ -422,12 +412,12 @@
                             <div class="legend-item"><img src="/ui/tickets/symbols/lottery circle.png" /> <span>~5%</span></div>
                         </div>
 
-                        <div class="close-btn" onclick=@CloseTicket>Close</div>
+                        <div class="close-btn" onclick=@CloseTicket>CLOSE</div>
                     </div>
 
                     <ScratchTicket PrizeAmount="@OpenedTicket.Prize"
                                    TicketTier="@OpenedTicket.Tier"
-                                   OnComplete="@(new Action<int>(OnTicketScratched))" />
+                                   OnComplete="@(new Action<decimal>(OnTicketScratched))" />
                 </div>
             </div>
         }
@@ -444,23 +434,23 @@
             <div class="history-log" style="padding-right: 5px;">
                 <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
                     <span style="color: #ff9800; font-size: 18px;">1. PlayerOne</span>
-                    <span class="history-win" style="font-size: 18px;">$ 99,999</span>
+                    <span class="history-win" style="font-size: 18px;">$ 999.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
                     <span style="color: #ccc; font-size: 16px;">2. Facepuncher</span>
-                    <span class="history-win" style="font-size: 16px;">$ 50,000</span>
+                    <span class="history-win" style="font-size: 16px;">$ 500.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
                     <span style="color: #cd7f32; font-size: 16px;">3. DevMaster</span>
-                    <span class="history-win" style="font-size: 16px;">$ 15,200</span>
+                    <span class="history-win" style="font-size: 16px;">$ 152.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
                     <span style="color: #888;">4. Garry</span>
-                    <span class="history-win" style="color: #888;">$ 5,000</span>
+                    <span class="history-win" style="color: #888;">$ 50.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
                     <span style="color: #888;">5. You</span>
-                    <span class="history-win" style="color: #888;">$ @Money</span>
+                    <span class="history-win" style="color: #888;">$ @Money.ToString("0.00")</span>
                 </div>
             </div>
         </div>
@@ -489,44 +479,78 @@
         public float Y { get; set; }
         public float Rotation { get; set; }
         public int ZIndex { get; set; }
-        public int Prize { get; set; }
+        public decimal Prize { get; set; } // Оновлено до decimal
         public string Tier { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
     }
 
     public class HistoryEntry
     {
         public string Message { get; set; }
-        public int Amount { get; set; }
+        public decimal Amount { get; set; } // Оновлено до decimal
     }
 
-    [Property] public int Money { get; set; } = 100;
+    // Оновлено стартовий баланс на 1$ (можеш змінити на 0m, якщо треба)
+    [Property] public decimal Money { get; set; } = 1.00m;
 
-    public int BasicTicketCost = 10;
+    public decimal BasicTicketCost = 1m; // 1$
     public List<ActiveTicket> TicketsOnTable { get; set; } = new();
     public ActiveTicket OpenedTicket { get; set; }
     public List<HistoryEntry> TicketHistory { get; set; } = new();
     private int ticketZCounter = 1;
 
-    public void EarnMoney()
+    public string GetTicketImage(string tier)
     {
-        Money += 5;
+        if (tier == "СРІБЛО") return "/ui/tickets/2.png";
+        if (tier == "ЗОЛОТО") return "/ui/tickets/3.png";
+        return "/ui/tickets/1.png";
     }
 
-    public void BuyTicket(int cost, string tier, int maxPrize, float winChance)
+    public void EarnMoney()
+    {
+        Money += 0.01m; // За 1 клік дає 0.01$
+    }
+
+    public void BuyTicket(decimal cost, string tier, decimal maxPrize, float winChance)
     {
         if (Money >= cost)
         {
             Money -= cost;
 
             bool isWin = System.Random.Shared.NextSingle() <= winChance;
-            int prize = isWin ? System.Random.Shared.Next(cost * 2, maxPrize + 1) : 0;
+            decimal prize = 0m;
+
+            if (isWin)
+            {
+                // Генеруємо випадковий дробовий приз від подвійної ціни до maxPrize
+                double min = (double)(cost * 2m);
+                double max = (double)maxPrize;
+                double range = max - min;
+                double sample = System.Random.Shared.NextDouble();
+                double scaled = (sample * range) + min;
+                prize = Math.Round((decimal)scaled, 2); // Округлюємо до 2 знаків
+            }
 
             ticketZCounter++;
 
-            // Generate spawn position
             float tx = 150 + System.Random.Shared.Next(0, 300);
             float ty = 150 + System.Random.Shared.Next(0, 300);
             float trot = System.Random.Shared.Next(-35, 35);
+
+            float tableW = 152f;
+            float tableH = 208f;
+
+            if (tier == "СРІБЛО")
+            {
+                tableW = 208f;
+                tableH = 152;
+            }
+            if (tier == "ЗОЛОТО")
+            {
+                tableW = 250f;
+                tableH = 120f;
+            }
 
             TicketsOnTable.Add(new ActiveTicket
             {
@@ -535,13 +559,14 @@
                 X = tx,
                 Y = ty,
                 Rotation = trot,
-                ZIndex = ticketZCounter
+                ZIndex = ticketZCounter,
+                Width = tableW,
+                Height = tableH
             });
         }
     }
 
-    // Метод для покупки покращень
-    public void BuyUpgrade(string upgradeName, int cost)
+    public void BuyUpgrade(string upgradeName, decimal cost)
     {
         if (Money >= cost)
         {
@@ -549,12 +574,9 @@
 
             TicketHistory.Add(new HistoryEntry
             {
-                Amount = -cost, // Від'ємне значення, щоб в історії відображалось іншим кольором
-                Message = $"Bought: {upgradeName}"
+                Amount = -cost,
+                Message = $"Bought: {upgradeName} (-${cost.ToString("0.00")})"
             });
-
-            // Тут в майбутньому можна буде додати логіку активації апгрейду
-            // наприклад: if(upgradeName == "Авто-стирач") HasAutoScratcher = true;
         }
     }
 
@@ -568,16 +590,17 @@
     public void CloseTicket()
     {
         OpenedTicket = null;
+        StateHasChanged();
     }
 
-    public void OnTicketScratched(int winAmount)
+    public void OnTicketScratched(decimal winAmount)
     {
         Money += winAmount;
 
         TicketHistory.Add(new HistoryEntry
         {
             Amount = winAmount,
-            Message = winAmount > 0 ? $"Win: ${winAmount}" : "You lost..."
+            Message = winAmount > 0 ? $"Win: ${winAmount.ToString("0.00")}" : "You lost..."
         });
 
         _ = DestroyTicketAfterDelay();
@@ -599,7 +622,6 @@
         }
         catch (System.Exception)
         {
-            // Ignore if task is cancelled
         }
     }
 
