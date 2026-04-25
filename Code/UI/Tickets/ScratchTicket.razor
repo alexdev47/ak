@@ -1,0 +1,76 @@
+@namespace Lottery
+
+<link rel="stylesheet" href="ScratchTicket.razor.scss" />
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Linq;
+@using System.Collections.Generic;
+@using System;
+@inherits Panel
+
+
+<root class="ticket-wrapper" style="width: @(Config?.TicketW ?? 380)px; height: @(Config?.TicketH ?? 520)px; background-image: url('@Config?.BgImage');" onmousedown=@OnMouseDown onmouseup=@OnMouseUp onmousemove=@OnMouseMove onmouseleave=@OnMouseLeave>
+
+    @if (Config != null)
+    {
+        @if (TicketTier == "ЗОЛОТО")
+        {
+            <!-- ЗОЛОТО: 4 верхних числа (их расположение настраивается через Config.SymX, SymY, SymW, SymH) -->
+            <div class="top-numbers-grid" style="position: absolute; top: @(Config.SymY)px; left: @(Config.SymX)px; width: @(Config.SymW)px; height: @(Config.SymH)px; display: flex; justify-content: space-between; align-items: center;">
+                @foreach (var num in TopNumbers)
+                {
+                    <div style="font-weight: 900; font-size: 20px; color: #fff; text-shadow: 0px 2px 4px #000; width: 40px; text-align: center;">@num</div>
+                }
+            </div>
+
+            <!-- ЗОЛОТО: 9 нижних чисел под стираемыми зонами (берут координаты напрямую из ScratchZones) -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;">
+                @for (int i = 0; i < Symbols.Count && i < Config.ScratchZones.Count; i++)
+                {
+                    var zone = Config.ScratchZones[i];
+                    <div style="position: absolute; left: @(zone.x)px; top: @(zone.y)px; width: @(zone.w)px; height: @(zone.h)px; display: flex; align-items: center; justify-content: center; background-color: #ffffff; border-radius: 5px;">
+                        <label style="font-weight: 900; font-size: 24px; color: #000;">@Symbols[i]</label>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="symbols-grid" style="top: @(Config.SymY)px; left: @(Config.SymX)px; width: @(Config.SymW)px; height: @(Config.SymH)px; gap: @(Config.SymGap)px;">
+                @foreach (var symPath in Symbols)
+                {
+                    <div class="symbol-box" style="padding: @(TicketTier == "СРІБЛО" ? "0px" : "15px"); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <img src="@symPath" />
+                        @if (TicketTier == "БРОНЗА")
+                        {
+                            string prizeDisplay = "$2";
+                            if (symPath.Contains("energy.png")) prizeDisplay = "$3";
+                            else if (symPath.Contains("message.png")) prizeDisplay = "$5";
+                            else if (symPath.Contains("skull.png")) prizeDisplay = "$10";
+                            else if (symPath.Contains("gift.png")) prizeDisplay = "$15";
+                            else if (symPath.Contains("Action!.png")) prizeDisplay = "$20";
+                            
+                            <span style="font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 0 2px #000; margin-top: 5px;">@prizeDisplay</span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+
+    <div class="scratch-grid">
+        @foreach (var cell in Cells)
+        {
+            <div class="scratch-cell @(cell.IsScratched ? "scratched" : "")"
+                 style="left: @(cell.X)px; top: @(cell.Y)px; width: @(CellSize)px; height: @(CellSize)px;">
+            </div>
+        }
+    </div>
+
+    <div class="result-banner @(isFinished ? "show" : "") @(PrizeAmount == 0m ? "loss" : "")">
+        <div class="result-text-main">
+            @(PrizeAmount > 0m ? $"WON ${PrizeAmount.ToString("0.00")}!" : "TRY AGAIN")
+        </div>
+    </div>
+</root>
+

@@ -1,0 +1,90 @@
+    .ticket-wrapper {
+        background-size: 100% 100%;
+        position: relative;
+        color: #fff;
+        text-align: center;
+        box-shadow: 0 16px 32px rgba(0,0,0,0.6);
+        cursor: default;
+    }
+
+    .symbols-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .symbol-box {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+    }
+
+        .symbol-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+    .scratch-grid {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .scratch-cell {
+        position: absolute;
+        background-color: #8D918D;
+        border: 1px solid #808080;
+        opacity: 1;
+        transition: opacity 0.05s ease;
+    }
+
+        .scratch-cell.scratched {
+            opacity: 0;
+        }
+
+    .result-banner {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        margin-bottom: 20px;
+        transform: translateX(-50%) scale(0);
+        background-image: url('/ui/basic_gui_bundle/BoxesBanners/Banner_Green.png');
+        background-size: 100% 100%;
+        width: 320px;
+        height: 120px;
+        z-index: 100;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .result-banner.show {
+            transform: translateX(-50%) scale(1);
+        }
+
+        .result-banner.loss {
+            background-image: url('/ui/basic_gui_bundle/BoxesBanners/Banner_Red.png');
+        }
+
+    .result-text-main {
+        font-size: 36px;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        margin-bottom: 5px;
+    }

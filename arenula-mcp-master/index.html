@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arenula — MCP Server Suite for s&amp;box</title>
+    <meta name="description" content="Connect AI coding assistants to the s&amp;box game engine. 19 tools, ~156 actions, 3 servers. Scene manipulation, API reference, documentation — all over MCP.">
+    <meta property="og:title" content="Arenula — MCP Server Suite for s&amp;box">
+    <meta property="og:description" content="Connect AI coding assistants to the s&amp;box game engine. 19 tools, ~156 actions, 3 servers.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nyx000.github.io/arenula-mcp/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Arenula — MCP Server Suite for s&amp;box">
+    <meta name="twitter:description" content="Connect AI coding assistants to the s&amp;box game engine. 19 tools, ~156 actions, 3 servers.">
+    <style>
+        :root {
+            --bg: #0c0c14;
+            --surface: #13131e;
+            --border: #232336;
+            --text: #d8d8e4;
+            --text-dim: #7c7c96;
+            --accent: #7b9aff;
+            --green: #5ae892;
+            --yellow: #f5c842;
+            --red: #f07070;
+            --purple: #b094fa;
+            --cyan: #3cd8e8;
+            --mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-padding-top: 60px; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            font-size: 15px;
+        }
+
+        .wrap { max-width: 960px; margin: 0 auto; padding: 0 40px; }
+
+        /* ── Hero ─────────────────────────────────── */
+        .hero {
+            padding: 72px 0 56px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--text);
+        }
+        .hero p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 56px;
+            margin-top: 40px;
+        }
+        .hero-art {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+        }
+        .hero-art svg {
+            width: 100%;
+            height: 100%;
+        }
+        .hero-stat .n {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .hero-stat .l {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        /* ── Divider ──────────────────────────────── */
+        hr.sep {
+            border: none;
+            height: 1px;
+            background: var(--border);
+            margin: 0;
+        }
+
+        /* ── Section ──────────────────────────────── */
+        .section { padding: 56px 0; }
+        .section h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .section > .wrap > p { color: var(--text-dim); margin-bottom: 28px; }
+
+        /* ── Server cards ─────────────────────────── */
+        .servers { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .srv {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+        }
+        .srv h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 6px; }
+        .srv p { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 12px; }
+        .srv-meta {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            display: flex;
+            gap: 16px;
+        }
+
+        /* ── Tool list ────────────────────────────── */
+        .tools { display: grid; gap: 6px; }
+        .t {
+            display: grid;
+            grid-template-columns: 130px 1fr 40px;
+            gap: 16px;
+            align-items: baseline;
+            padding: 9px 16px;
+            border-radius: 6px;
+            background: var(--surface);
+            border: 1px solid transparent;
+        }
+        .t:nth-child(odd) { background: rgba(19,19,30,0.6); }
+        .t-name {
+            font-family: var(--mono);
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--cyan);
+        }
+        .t-acts {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .t-acts code {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(123,154,255,0.07);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+        .t-n {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        /* ── Architecture ─────────────────────────── */
+        .arch-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        .arch-node {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 48px;
+            text-align: center;
+            position: relative;
+            min-width: 240px;
+        }
+        .arch-node .node-title {
+            font-family: var(--mono);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .arch-node .node-sub {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        .arch-node.client { border-color: var(--accent); }
+        .arch-node.client .node-title { color: var(--accent); }
+        .arch-node.server { border-color: var(--green); }
+        .arch-node.server .node-title { color: var(--green); }
+        .arch-node.dispatch { border-color: var(--yellow); }
+        .arch-node.dispatch .node-title { color: var(--yellow); }
+
+        .arch-connector {
+            width: 2px;
+            height: 36px;
+            background: var(--border);
+            position: relative;
+        }
+        .arch-connector-label {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .arch-branches {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            width: 100%;
+            max-width: 780px;
+        }
+        .arch-branches::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: calc(50% - 300px);
+            width: 600px;
+            height: 2px;
+            background: var(--border);
+        }
+        .arch-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            max-width: 240px;
+            position: relative;
+        }
+        .arch-branch::before {
+            content: '';
+            width: 2px;
+            height: 32px;
+            background: var(--border);
+        }
+        .arch-branch-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 22px;
+            text-align: center;
+            width: 100%;
+        }
+        .arch-branch-card .branch-title {
+            font-family: var(--mono);
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .arch-branch-card .branch-desc {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .arch-branch:nth-child(1) .arch-branch-card { border-color: var(--cyan); }
+        .arch-branch:nth-child(1) .branch-title { color: var(--cyan); }
+        .arch-branch:nth-child(2) .arch-branch-card { border-color: var(--yellow); }
+        .arch-branch:nth-child(2) .branch-title { color: var(--yellow); }
+        .arch-branch:nth-child(3) .arch-branch-card { border-color: var(--green); }
+        .arch-branch:nth-child(3) .branch-title { color: var(--green); }
+
+        .arch-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+        .arch-detail-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .arch-detail-card h4 {
+            font-size: 0.88rem;
+            color: var(--text);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .arch-detail-card h4 .count {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--accent);
+            background: rgba(123,154,255,0.12);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .arch-detail-card p {
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            margin: 0;
+            line-height: 1.55;
+        }
+        .arch-detail-card code {
+            font-family: var(--mono);
+            font-size: 0.76rem;
+            color: var(--accent);
+            background: rgba(123,154,255,0.07);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        /* ── Comparison table ─────────────────────── */
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+        th {
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .g { color: var(--green); font-weight: 600; }
+        .r { color: var(--red); }
+        .d { color: var(--text-dim); }
+
+        /* ── Principles ───────────────────────────── */
+        .princ { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .pr {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .pr h4 { font-size: 0.88rem; color: var(--accent); margin-bottom: 4px; }
+        .pr p { font-size: 0.82rem; color: var(--text-dim); margin: 0; }
+
+        /* ── Install ──────────────────────────────── */
+        .install h3 {
+            font-size: 0.95rem;
+            color: var(--text);
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+        .install h3:first-child { margin-top: 0; }
+        pre.code {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--text);
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+        pre.code .cm { color: var(--text-dim); }
+        pre.code .p { color: var(--green); }
+
+        /* ── Footer ───────────────────────────────── */
+        .footer {
+            text-align: center;
+            padding: 36px 0;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+
+        /* ── Top nav ──────────────────────────────── */
+        .topnav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(12, 12, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+        }
+        .topnav .wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topnav-brand {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+        .topnav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        .topnav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.15s;
+        }
+        .topnav-links a:hover { color: var(--text); }
+        .gh-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .gh-btn:hover { border-color: var(--accent); background: rgba(123,154,255,0.06); }
+        .gh-btn svg { width: 18px; height: 18px; fill: var(--text); }
+
+        /* ── Hero buttons ─────────────────────────── */
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 32px;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            color: #0c0c14;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.15s;
+        }
+        .btn-primary:hover { opacity: 0.88; }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: border-color 0.15s;
+        }
+        .btn-secondary:hover { border-color: var(--accent); }
+
+        /* ── Print ────────────────────────────────── */
+        @media print {
+            @page { size: A4; margin: 0; }
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                font-size: 12px;
+            }
+            .topnav { display: none; }
+            .hero { padding-top: 72px !important; }
+            .wrap { max-width: 100%; padding: 0 28px; }
+            /* Hero */
+            .hero-art { width: 40px; height: 40px; margin-bottom: 2px; }
+            .hero { padding: 12px 0 8px; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { font-size: 0.95rem; margin-top: 6px; }
+            .hero-stats { margin-top: 20px; gap: 36px; }
+            .hero-stat .n { font-size: 1.6rem; }
+            .hero-stat .l { font-size: 0.65rem; margin-top: 2px; }
+            /* Sections */
+            .section { padding: 22px 0; }
+            .section h2 { font-size: 1.2rem; margin-bottom: 3px; }
+            .section > .wrap > p { margin-bottom: 14px; font-size: 0.8rem; }
+            hr.sep { margin: 0; }
+            /* Server cards */
+            .servers { gap: 8px; }
+            .srv { padding: 12px 14px; border-radius: 8px; }
+            .srv h3 { font-size: 0.92rem; margin-bottom: 3px; }
+            .srv p { font-size: 0.78rem; margin-bottom: 8px; }
+            .srv-meta { font-size: 0.68rem; padding-top: 7px; }
+            /* Tool list — must fit on same page as hero+servers */
+            .tools-sep { display: none; }
+            .section:nth-child(5) { padding: 14px 0 6px; } /* tighten tools section */
+            .section:nth-child(5) > .wrap > p { margin-bottom: 10px; }
+            .tools { gap: 0; break-inside: avoid; }
+            .t { padding: 2px 9px; border-radius: 2px; grid-template-columns: 100px 1fr 26px; gap: 8px; }
+            .t-name { font-size: 0.72rem; }
+            .t-acts { font-size: 0.62rem; line-height: 1.3; }
+            .t-acts code { font-size: 0.6rem; padding: 0 3px; border-radius: 2px; }
+            .t-n { font-size: 0.62rem; }
+            /* Architecture */
+            .arch-flow { margin-top: 6px; margin-bottom: 14px; }
+            .arch-node { padding: 8px 20px; min-width: 160px; border-radius: 8px; }
+            .arch-node .node-title { font-size: 0.8rem; }
+            .arch-node .node-sub { font-size: 0.65rem; }
+            .arch-connector { height: 14px; }
+            .arch-connector-label { font-size: 0.6rem; padding: 3px 0; }
+            .arch-branch::before { height: 16px; }
+            .arch-branch-card { padding: 10px 12px; border-radius: 8px; }
+            .arch-branch-card .branch-title { font-size: 0.74rem; margin-bottom: 4px; }
+            .arch-branch-card .branch-desc { font-size: 0.64rem; line-height: 1.5; }
+            .arch-branches { max-width: 100%; gap: 0; }
+            .arch-branches::before { left: 15%; width: 70%; }
+            .arch-details { gap: 8px; }
+            .arch-detail-card { padding: 12px; border-radius: 8px; }
+            .arch-detail-card h4 { font-size: 0.8rem; margin-bottom: 4px; }
+            .arch-detail-card h4 .count { font-size: 0.6rem; }
+            .arch-detail-card p { font-size: 0.72rem; }
+            .arch-detail-card code { font-size: 0.66rem; }
+            /* Principles — must stay together on page 2 */
+            .princ-sep { display: none; }
+            .section:nth-child(8) { padding: 18px 0; break-inside: avoid; }
+            .princ { gap: 8px; break-inside: avoid; }
+            .pr { padding: 12px 14px; border-radius: 6px; }
+            .pr h4 { font-size: 0.85rem; margin-bottom: 2px; }
+            .pr p { font-size: 0.76rem; }
+            /* Install */
+            .install h3 { font-size: 0.85rem; margin-top: 14px; margin-bottom: 4px; }
+            pre.code { padding: 10px 14px; font-size: 0.72rem; border-radius: 6px; }
+            /* Footer */
+            .footer { padding: 16px 0; font-size: 0.7rem; }
+            .t, .srv, .pr, .arch-node, .arch-branch-card, .arch-detail-card, pre.code { break-inside: avoid; }
+        }
+
+        @media (max-width: 700px) {
+            .servers, .princ, .arch-details { grid-template-columns: 1fr; }
+            .arch-branches { flex-direction: column; align-items: center; gap: 10px; }
+            .arch-branches::before { display: none; }
+            .arch-branch::before { display: none; }
+            .arch-branch { max-width: 260px; }
+            .t { grid-template-columns: 1fr; }
+            .hero-stats { flex-direction: column; gap: 20px; }
+            .hero-actions { flex-direction: column; align-items: center; }
+            .topnav-links a:not(.gh-btn) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <div class="wrap">
+        <a href="#" class="topnav-brand">Arenula</a>
+        <div class="topnav-links">
+            <a href="#tools">Tools</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#install">Install</a>
+            <a href="https://github.com/Nyx000/Arenula-MCP" class="gh-btn" target="_blank">
+                <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                GitHub
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="hero" style="padding-top: 120px;">
+    <div class="wrap">
+        <h1>Arenula</h1>
+        <div class="hero-art">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Ambient drift particles -->
+                <circle cx="40" cy="35" r="1.5" fill="#7b9aff" opacity="0.25">
+                    <animate attributeName="cy" values="35;30;35" dur="6s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="160" cy="50" r="1" fill="#5ae892" opacity="0.2">
+                    <animate attributeName="cy" values="50;44;50" dur="5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="55" cy="155" r="1.2" fill="#f5c842" opacity="0.2">
+                    <animate attributeName="cy" values="155;150;155" dur="7s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="150" cy="145" r="1" fill="#b094fa" opacity="0.15">
+                    <animate attributeName="cy" values="145;140;145" dur="5.5s" repeatCount="indefinite"/>
+                </circle>
+
+                <!-- Soft glow behind grain -->
+                <radialGradient id="glow">
+                    <stop offset="0%" stop-color="#7b9aff" stop-opacity="0.12"/>
+                    <stop offset="100%" stop-color="#7b9aff" stop-opacity="0"/>
+                </radialGradient>
+                <circle cx="100" cy="95" r="55" fill="url(#glow)"/>
+
+                <!-- The grain of sand -->
+                <defs>
+                    <radialGradient id="grain-fill" cx="40%" cy="35%" r="60%">
+                        <stop offset="0%" stop-color="#f5c842"/>
+                        <stop offset="50%" stop-color="#d4a832"/>
+                        <stop offset="100%" stop-color="#a07820"/>
+                    </radialGradient>
+                    <radialGradient id="grain-shine" cx="35%" cy="30%" r="40%">
+                        <stop offset="0%" stop-color="#fff" stop-opacity="0.3"/>
+                        <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- Grain shape — slightly irregular, organic -->
+                <ellipse cx="100" cy="96" rx="22" ry="19" fill="url(#grain-fill)" transform="rotate(-8 100 96)">
+                    <animate attributeName="cy" values="96;93;96" dur="4s" repeatCount="indefinite"/>
+                </ellipse>
+                <!-- Highlight -->
+                <ellipse cx="94" cy="90" rx="10" ry="8" fill="url(#grain-shine)" transform="rotate(-8 94 90)">
+                    <animate attributeName="cy" values="90;87;90" dur="4s" repeatCount="indefinite"/>
+                </ellipse>
+
+                <!-- Tiny scattered grains around it -->
+                <circle cx="68" cy="115" r="3" fill="#d4a832" opacity="0.5">
+                    <animate attributeName="cy" values="115;112;115" dur="4.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="135" cy="108" r="2.5" fill="#c49828" opacity="0.4">
+                    <animate attributeName="cy" values="108;105;108" dur="5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="82" cy="78" r="2" fill="#e0b838" opacity="0.35">
+                    <animate attributeName="cy" values="78;75;78" dur="3.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="122" cy="82" r="1.5" fill="#d4a832" opacity="0.3">
+                    <animate attributeName="cy" values="82;79;82" dur="4.2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="108" cy="118" r="2" fill="#c49828" opacity="0.3">
+                    <animate attributeName="cy" values="118;115;118" dur="5.5s" repeatCount="indefinite"/>
+                </circle>
+            </svg>
+        </div>
+        <p>MCP server suite for the s&amp;box game engine</p>
+        <div class="hero-actions">
+            <a href="#install" class="btn-primary">Get Started</a>
+            <a href="https://github.com/Nyx000/Arenula-MCP" class="btn-secondary" target="_blank">View Source</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="n">19</div><div class="l">Tools</div></div>
+            <div class="hero-stat"><div class="n">~156</div><div class="l">Actions</div></div>
+            <div class="hero-stat"><div class="n">3</div><div class="l">Servers</div></div>
+            <div class="hero-stat"><div class="n">8-13K</div><div class="l">Tokens</div></div>
+        </div>
+    </div>
+</div>
+
+<hr class="sep">
+
+<div class="section">
+    <div class="wrap">
+        <h2>Three Servers, One Suite</h2>
+        <p>Each server has a distinct role. The Editor runs inside s&box; the API and Docs servers run standalone.</p>
+        <div class="servers">
+            <div class="srv">
+                <h3>Editor</h3>
+                <p>Scene manipulation, code compilation, asset management, terrain editing. Runs inside the s&box editor as a C# library plugin.</p>
+                <div class="srv-meta"><span>19 tools</span><span>SSE :8098</span><span>C#</span></div>
+            </div>
+            <div class="srv">
+                <h3>API</h3>
+                <p>Offline type and member reference. Indexes ~1,800 types and ~15,000 members from the s&box CDN schema. Also fetches PBR textures from ambientCG and Poly Haven.</p>
+                <div class="srv-meta"><span>9 tools</span><span>stdio</span><span>TypeScript</span></div>
+            </div>
+            <div class="srv">
+                <h3>Docs</h3>
+                <p>Narrative documentation fetcher. Fetches raw Markdown from sbox.game via .md endpoints, strips front-matter, caches with LRU.</p>
+                <div class="srv-meta"><span>3 tools</span><span>stdio</span><span>TypeScript</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="sep">
+
+<div class="section">
+    <div class="wrap">
+        <h2 id="tools">Editor Tools</h2>
+        <p>19 omnibus tools, ~156 actions. Each takes a required <code>action</code> parameter to select the operation.</p>
+        <div class="tools">
+            <div class="t"><div class="t-name">scene</div><div class="t-acts"><code>summary</code> <code>hierarchy</code> <code>statistics</code> <code>find</code> <code>find_in_radius</code> <code>get_details</code> <code>prefab_instances</code></div><div class="t-n">7</div></div>
+            <div class="t"><div class="t-name">gameobject</div><div class="t-acts"><code>create</code> <code>destroy</code> <code>duplicate</code> <code>reparent</code> <code>rename</code> <code>enable</code> <code>set_tags</code> <code>set_transform</code> <code>batch_transform</code></div><div class="t-n">9</div></div>
+            <div class="t"><div class="t-name">component</div><div class="t-acts"><code>add</code> <code>remove</code> <code>set_property</code> <code>set_enabled</code> <code>get_properties</code> <code>get_types</code> <code>copy</code></div><div class="t-n">7</div></div>
+            <div class="t"><div class="t-name">compile</div><div class="t-acts"><code>trigger</code> <code>status</code> <code>errors</code> <code>generate_solution</code> <code>wait</code></div><div class="t-n">5</div></div>
+            <div class="t"><div class="t-name">prefab</div><div class="t-acts"><code>instantiate</code> <code>get_structure</code> <code>get_instances</code> <code>break</code> <code>update</code> <code>create</code> <code>save_overrides</code> <code>revert</code> <code>get_overrides</code></div><div class="t-n">9</div></div>
+            <div class="t"><div class="t-name">asset_query</div><div class="t-acts"><code>browse</code> <code>search</code> <code>open</code> <code>get_dependencies</code> <code>get_model_info</code> <code>get_material_properties</code> <code>get_mesh_info</code> <code>get_bounds</code> <code>get_unsaved</code> <code>get_status</code> <code>get_json</code> <code>get_references</code></div><div class="t-n">12</div></div>
+            <div class="t"><div class="t-name">asset_manage</div><div class="t-acts"><code>create</code> <code>delete</code> <code>rename</code> <code>move</code> <code>save</code> <code>reload</code> <code>get_references</code></div><div class="t-n">7</div></div>
+            <div class="t"><div class="t-name">editor</div><div class="t-acts"><code>select</code> <code>get_selected</code> <code>set_selected</code> <code>clear_selection</code> <code>frame_selection</code> <code>get_play_state</code> <code>start_play</code> <code>stop_play</code> <code>get_log</code> <code>save_scene</code> <code>save_scene_as</code> <code>undo</code> <code>redo</code> <code>console_list</code> <code>console_run</code> <code>open_code_file</code> <code>get_preferences</code> <code>set_preference</code></div><div class="t-n">18</div></div>
+            <div class="t"><div class="t-name">session</div><div class="t-acts"><code>list</code> <code>set_active</code> <code>load_scene</code></div><div class="t-n">3</div></div>
+            <div class="t"><div class="t-name">lighting</div><div class="t-acts"><code>create</code> <code>configure</code> <code>create_skybox</code> <code>set_skybox</code></div><div class="t-n">4</div></div>
+            <div class="t"><div class="t-name">physics</div><div class="t-acts"><code>add_collider</code> <code>configure_collider</code> <code>add_rigidbody</code> <code>create_model_physics</code> <code>create_character_controller</code> <code>create_joint</code></div><div class="t-n">6</div></div>
+            <div class="t"><div class="t-name">audio</div><div class="t-acts"><code>create</code> <code>configure</code></div><div class="t-n">2</div></div>
+            <div class="t"><div class="t-name">effects</div><div class="t-acts"><code>create</code> <code>configure_particle</code> <code>configure_post_processing</code></div><div class="t-n">3</div></div>
+            <div class="t"><div class="t-name">camera</div><div class="t-acts"><code>create</code> <code>configure</code> <code>capture_viewport</code> <code>capture_tour</code> <code>orbit_capture</code></div><div class="t-n">5</div></div>
+            <div class="t"><div class="t-name">mesh</div><div class="t-acts"><code>create_block</code> <code>create_plane</code> <code>create_cylinder</code> <code>create_wedge</code> <code>create_arch</code> <code>create_clutter</code> <code>extrude_faces</code> <code>remove_faces</code> <code>add_face</code> <code>clip_faces</code> <code>scale_mesh</code> <code>thicken_faces</code> <code>bevel_edges</code> <code>bevel_vertices</code> <code>split_edges</code> <code>quad_slice_faces</code> <code>dissolve_edges</code> <code>bridge_edges</code> <code>connect_vertices</code> <code>flip_faces</code> <code>extend_edges</code> <code>set_face_material</code> <code>set_texture_params</code> <code>set_vertex_position</code> <code>set_vertex_color</code> <code>set_vertex_blend</code> <code>get_info</code></div><div class="t-n">27</div></div>
+            <div class="t"><div class="t-name">navmesh</div><div class="t-acts"><code>create_agent</code> <code>create_area</code> <code>create_link</code> <code>generate</code> <code>get_status</code> <code>query_path</code></div><div class="t-n">6</div></div>
+            <div class="t"><div class="t-name">cloud</div><div class="t-acts"><code>search</code> <code>get_package</code> <code>get_versions</code> <code>mount</code></div><div class="t-n">4</div></div>
+            <div class="t"><div class="t-name">project</div><div class="t-acts"><code>get_collision</code> <code>set_collision_rule</code> <code>get_input</code> <code>get_info</code></div><div class="t-n">4</div></div>
+            <div class="t"><div class="t-name">terrain</div><div class="t-acts"><code>create</code> <code>configure</code> <code>get_info</code> <code>get_height</code> <code>get_height_region</code> <code>set_height</code> <code>noise</code> <code>erode</code> <code>stamp</code> <code>add_material</code> <code>remove_material</code> <code>get_material_at</code> <code>blend_materials</code> <code>set_hole</code> <code>paint_material</code> <code>import_heightmap</code> <code>export_heightmap</code> <code>sync</code></div><div class="t-n">18</div></div>
+        </div>
+    </div>
+</div>
+
+<hr class="sep tools-sep">
+
+<div class="section">
+    <div class="wrap">
+        <h2 id="architecture">Architecture</h2>
+        <p>28 C# source files organized into Core infrastructure and per-tool Handlers.</p>
+
+        <div class="arch-flow">
+            <div class="arch-node client">
+                <div class="node-title">AI Client</div>
+                <div class="node-sub">Claude Code, Cursor, Copilot, etc.</div>
+            </div>
+            <div class="arch-connector-label">HTTP / SSE</div>
+            <div class="arch-node server">
+                <div class="node-title">ArenulaMcpServer</div>
+                <div class="node-sub">Listener &middot; Session &middot; Port 8098</div>
+            </div>
+            <div class="arch-connector"></div>
+            <div class="arch-node dispatch">
+                <div class="node-title">RpcDispatcher</div>
+                <div class="node-sub">JSON-RPC &middot; Tool + Action routing</div>
+            </div>
+            <div class="arch-connector"></div>
+            <div class="arch-branches">
+                <div class="arch-branch">
+                    <div class="arch-branch-card">
+                        <div class="branch-title">Async Path</div>
+                        <div class="branch-desc">compile, cloud<br>Background thread<br>No deadlocks</div>
+                    </div>
+                </div>
+                <div class="arch-branch">
+                    <div class="arch-branch-card">
+                        <div class="branch-title">Console Path</div>
+                        <div class="branch-desc">console_list, console_run<br>Sync isolation<br>Exception safe</div>
+                    </div>
+                </div>
+                <div class="arch-branch">
+                    <div class="arch-branch-card">
+                        <div class="branch-title">Main Thread</div>
+                        <div class="branch-desc">All other tools<br>GameTask.MainThread()<br>Scene API access</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="arch-details">
+            <div class="arch-detail-card">
+                <h4>Core <span class="count">8 files</span></h4>
+                <p><code>ArenulaMcpServer</code> HTTP/SSE listener and session management. <code>RpcDispatcher</code> extracts tool name + action, routes to the correct handler. <code>ToolRegistry</code> holds all 19 tool schemas. <code>HandlerBase</code> provides response formatting, pagination, and error helpers. <code>SceneHelpers</code> handles scene resolution and tree walking.</p>
+            </div>
+            <div class="arch-detail-card">
+                <h4>Handlers <span class="count">20 files</span></h4>
+                <p>One file per tool. Each exports a <code>Handle(action, args)</code> method with an internal switch on the action enum. Async handlers (<code>CompileHandler</code>, <code>CloudHandler</code>) use <code>HandleAsync</code> and dispatch before <code>GameTask.MainThread()</code> to prevent deadlocks.</p>
+            </div>
+            <div class="arch-detail-card">
+                <h4>Threading Model</h4>
+                <p>Scene APIs must run on the main thread. The dispatcher calls <code>await GameTask.MainThread()</code> before invoking sync handlers. Async handlers (network/compile) run on the background thread and may internally switch to main thread for specific sub-operations.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="sep">
+
+<div class="section">
+    <div class="wrap">
+        <h2>Design Principles</h2>
+        <p>Following <a href="https://www.anthropic.com/engineering/writing-tools-for-agents" style="color:var(--accent)">Anthropic's MCP tool design guidance</a>.</p>
+        <div class="princ">
+            <div class="pr"><h4>Omnibus Tools</h4><p>Related operations grouped with action enum parameter. Fewer tools means less selection ambiguity for the LLM.</p></div>
+            <div class="pr"><h4>Rich Descriptions</h4><p>3-4 sentences per tool explaining what it does, when to use it, and when not to. Negative guidance prevents misuse.</p></div>
+            <div class="pr"><h4>Trimmed Responses</h4><p>Canonical {id, name} tuples. Pagination with offset/limit. 16K character truncation. Concise and detailed modes.</p></div>
+            <div class="pr"><h4>Actionable Errors</h4><p>Structured errors with action context and suggestions. Fuzzy type matching: "Did you mean Rigidbody?"</p></div>
+            <div class="pr"><h4>Schema Safety</h4><p>additionalProperties: false on every schema. Enum constraints on actions and sub-types. Prevents hallucination.</p></div>
+            <div class="pr"><h4>Async Safety</h4><p>Network tools dispatch before MainThread to avoid deadlocks. Never block the main thread with synchronous waits.</p></div>
+        </div>
+    </div>
+</div>
+
+<hr class="sep princ-sep">
+
+<div class="section install">
+    <div class="wrap">
+        <h2 id="install">Installation</h2>
+        <h3>1. Copy the Editor plugin</h3>
+        <pre class="code"><span class="cm"># Copy into your s&box project's Libraries folder</span>
+<span class="p">Arenula-MCP/editor/</span>  -->  <span class="p">YourProject/Libraries/arenula_mcp/</span></pre>
+        <h3>2. Build the API and Docs servers</h3>
+        <pre class="code"><span class="cm"># From the Arenula-MCP directory</span>
+npm run setup</pre>
+        <h3>3. Configure .mcp.json in your project root</h3>
+        <pre class="code">{
+  "mcpServers": {
+    <span class="p">"editor"</span>: { "type": "sse", "url": "http://localhost:8098/sse" },
+    <span class="p">"api"</span>:    { "command": "node", "args": ["path/to/Arenula-MCP/api/dist/index.js"] },
+    <span class="p">"docs"</span>:   { "command": "node", "args": ["path/to/Arenula-MCP/docs/dist/index.js"] }
+  }
+}</pre>
+        <h3>4. Open s&box</h3>
+        <p>Arenula Editor compiles automatically and starts the MCP server on port 8098.</p>
+    </div>
+</div>
+
+<hr class="sep">
+
+<div class="footer">
+    <div class="wrap">
+        Based on <a href="https://github.com/ozmium7/ozmium-mcp-server-for-sbox">Ozmium MCP Server</a> by ozmium7 &middot; API from <a href="https://github.com/sofianebel/sbox-api-mcp">sbox-api-mcp</a> by sofianebel &middot; Docs from <a href="https://github.com/sofianebel/sbox-docs-mcp">sbox-docs-mcp</a> by sofianebel<br>
+        GPL-3.0 (Editor) &middot; MIT (API, Docs)
+    </div>
+</div>
+
+</body>
+</html>

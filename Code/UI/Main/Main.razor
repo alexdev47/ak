@@ -1,0 +1,284 @@
+@namespace Lottery
+
+
+@using Sandbox;
+@using Sandbox.UI;
+@using System;
+@using System.Linq;
+@using System.Collections.Generic;
+@using System.Threading.Tasks;
+@inherits PanelComponent
+
+
+<root class="game-root">
+    @if (HasVipPass)
+    {
+        <style>
+            .game-root {
+                background-color: #1c1500 !important;
+            }
+            .sidebar, .right-sidebar {
+                background-color: #140f00 !important;
+                border-color: #ffd700 !important;
+            }
+            .money-counter {
+                color: #ffd700 !important;
+                text-shadow: 0 0 10px #ffd700 !important;
+            }
+            .shop-title {
+                color: #ffd700 !important;
+                text-shadow: 0 0 10px #ffd700 !important;
+            }
+            .table-ticket {
+                box-shadow: 0 0 15px #ffd700 !important;
+            }
+        </style>
+    }
+
+    <link rel="stylesheet" href="Main.razor.scss" />
+
+    <div class="sidebar">
+
+        <div class="stats-row">
+            <img class="money-icon" src="/ui/coin.png" alt="Money" />
+            <div class="money-counter">$ @Money.ToString("0.00")</div>
+        </div>
+
+        <div class="click-btn" onclick=@(() => EarnMoney())>
+            CLICK
+        </div>
+
+        <div class="shop-container">
+            <div class="shop-title">SHOP</div>
+
+            <div class="shop-list">
+                <div class="shop-item">
+                    <div class="item-info">
+                        
+                        <div class="item-title">ONE LUCKY TICKET</div>
+                        <div class="item-desc">Basic ticket just for fun</div>
+                    </div>
+                    <div class="buy-btn @(Money < BasicTicketCost ? "disabled" : "")"
+                    
+                         onclick=@(() => BuyTicket(BasicTicketCost, "БРОНЗА"))>
+                        $ @BasicTicketCost.ToString("0")
+                    </div>
+                </div>
+
+                <div class="shop-item">
+            
+                    <div class="item-info">
+                        <div class="item-title">TICKET 67</div>
+                        <div class="item-desc">Brainrot edition, funded by tun tun sahur </div>
+                    </div>
+             
+                    <div class="buy-btn @(Money < 10m ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(10m, "СРІБЛО"))>
+                        $ 10
+                    </div>
+                </div>
+
+       
+                 <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">GAMBLERS PARADISE</div>
+                        <div class="item-desc">ALL OT NOTHING!!!!</div>
+                
+                    </div>
+                    <div class="buy-btn @(Money < 50m ? "disabled" : "")"
+                         onclick=@(() => BuyTicket(50m, "ЗОЛОТО"))>
+                        $ 50
+             
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="shop-list" style="margin-top: 15px;">
+                <div class="shop-item" style="min-height: 80px; border: 2px solid gold; background: linear-gradient(45deg, #2a2a2a, #4a3a00); box-shadow: 0 0 20px rgba(255,193,7,0.4); animation: @(HasVipPass ? "none" : "pulse 2s infinite");">
+                    <div class="item-info">
+                        <div class="item-title" style="color: #ffd700; text-shadow: 0 0 5px #ffd700, 0 0 10px #ff8c00; font-size: 20px;">VIP PASS</div>
+                        <div class="item-desc" style="color: #ffeb3b; font-weight: bold; font-size: 14px; margin-top: 8px; padding-top: 5px;">
+                            @(HasVipPass ? "UNLOCKED: x10 Clicks & Gold UI!" : "x10 Clicks + Gold UI")
+                        </div>
+                    </div>
+        
+                    <div class="buy-btn @(Money < 500000m || HasVipPass ? "disabled" : "")"
+                         style="background: linear-gradient(180deg, #ffcc00, #ff9900); color: black; box-shadow: 0 0 15px #ffcc00; font-weight: 900;"
+                         onclick=@(() => BuyUpgrade("VIP Pass", 500000m))>
+                        @(HasVipPass ? "OWNED" : "$ 500K")
+                    </div>
+              
+                </div>
+            </div>
+        </div>
+
+        <div class="upgrades-container">
+            <div class="shop-title">Upgrades</div>
+
+            <div class="shop-list">
+                <div class="shop-item">
+                    <div class="item-info">
+     
+                        <div class="item-title">Income Lvl @(IncomeLevel)</div>
+                        <div class="item-desc">x2 reward from clicks</div>
+                    </div>
+                    <div class="buy-btn @(Money < IncomeCost ? "disabled" : "")"
+  
+                        onclick=@(() => BuyUpgrade("Income", IncomeCost))>
+                        $ @IncomeCost.ToString("0")
+                    </div>
+                </div>
+
+             
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">Autoclicker Lvl @(AutoclickerLevel)</div>
+                        <div class="item-desc">-10% time between autoclicks</div>
+                    
+                    </div>
+                    <div class="buy-btn @(Money < AutoclickerCost ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("Autoclicker", AutoclickerCost))>
+                        $ @AutoclickerCost.ToString("0")
+                    </div>
+                </div>
+         
+                
+                </div>
+        </div>
+
+    </div>
+
+    <div class="main-area" onmousemove=@OnMouseMove onmouseup=@OnMouseUp onmouseleave=@OnMouseUp>
+ 
+        @foreach (var ticket in TicketsOnTable)
+        {
+            <div class="table-ticket"
+                 style="width: @(ticket.Width)px; height: @(ticket.Height)px; background-image: url('@GetTicketImage(ticket.Tier)'); left: @(ticket.X)px; top: @(ticket.Y)px; transform: rotate(@(ticket.Rotation)deg) translate(-50%, -50%); z-index: @(ticket.ZIndex); filter: @(ticket.IsScratched ? "grayscale(100%) brightness(0.8)" : (ticket.IsBeingProcessed ? "brightness(1.5) blur(2px)" : "brightness(1)"));"
+                 onmousedown=@(() => StartDrag(ticket))>
+                @if (ticket.IsScratched && !HasAutoOpener)
+                {
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-weight: 900; font-size: 28px; color: #4CAF50; text-shadow: 0 0 10px #000; pointer-events: none;">SCRATCHED!</div>
+                }
+            </div>
+        }
+
+        @if (OpenedTicket != null)
+        {
+            <div class="modal-overlay">
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;" onmousedown=@CloseTicket></div>
+                <div class="modal-content" style="z-index: 1;">
+
+                    <div class="ticket-legend">
+                        <div class="legend-title">RULES</div>
+
+                        @if (OpenedTicket.Tier == "СРІБЛО")
+                        {
+                            <div class="legend-desc">Get 3 same pictures to win! Or sahur brainrots:</div>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="legend-item"><img src="/ui/tickets/symbols/brainrot6.png" /> <span>1x = $10</span></div>
+                                <div class="legend-item"><img src="/ui/tickets/symbols/brainrot6.png" /> <span>2x = $500</span></div>
+                       
+                                <div class="legend-item"><img src="/ui/tickets/symbols/brainrot6.png" /> <span>3x = $2500</span></div>
+                            </div>
+                        }
+                        else if (OpenedTicket.Tier == "ЗОЛОТО")
+     
+                        {
+                            <div class="legend-desc">Match TOP 4 numbers with BOTTOM 9 numbers:</div>
+                            <div style="display:flex; flex-direction:column; gap:10px; color: white;">
+                                <div class="legend-item" style="justify-content: flex-start;"> <span>1 Match = $50</span></div>
+                                <div class="legend-item" style="justify-content: flex-start;"> <span>2 Matches = $450</span></div>
+                   
+                                <div class="legend-item" style="justify-content: flex-start;"> <span>3 Matches = $1,350</span></div>
+                                <div class="legend-item" style="justify-content: flex-start;"> <span>4 Matches = $4,050</span></div>
+                            </div>
+             
+                        }
+                        else // БРОНЗА
+                        {
+                            <div class="legend-desc">Find 3 of a kind:</div>
+      
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <div class="legend-item"><img src="/ui/tickets/symbols/chest.png" /> <span>$2</span></div>
+                                <div class="legend-item"><img src="/ui/tickets/symbols/energy.png" /> <span>$3</span></div>
+                           
+                                <div class="legend-item"><img src="/ui/tickets/symbols/message.png" /> <span>$5</span></div>
+                                <div class="legend-item"><img src="/ui/tickets/symbols/skull.png" /> <span>$10</span></div>
+                                <div class="legend-item"><img src="/ui/tickets/symbols/gift.png" /> <span>$15</span></div>
+                   
+                                <div class="legend-item"><img src="/ui/tickets/symbols/Action!.png" /> <span>$20</span></div>
+                            </div>
+                        }
+
+                        <div class="close-btn" onclick=@CloseTicket>CLOSE</div>
+     
+                    </div>
+
+                    <ScratchTicket PrizeAmount="@OpenedTicket.Prize"
+                                   TicketTier="@OpenedTicket.Tier"
+                                   Symbols="@OpenedTicket.Symbols"
+                                   TopNumbers="@OpenedTicket.TopNumbers"
+                                   IsPreScratched="@OpenedTicket.IsScratched"
+                                   OnComplete="@(new Action<decimal>(OnTicketScratched))" />
+                </div>
+            </div>
+        }
+        else if (TicketsOnTable.Count == 0)
+        {
+ 
+            <div class="no-ticket-text">Buy a Ticket</div>
+        }
+    </div>
+
+    <div class="right-sidebar">
+
+        <div class="shop-container" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="shop-title">Leaderboard</div>
+            <div class="history-log" style="padding-right: 5px;">
+                @if (TopPlayersBoard == null)
+                {
+                    <div style="text-align: center; color: #888; font-size: 14px; padding: 20px 0;">
+                        Loading rankings...
+                    </div>
+                }
+                else if (TopPlayersBoard.Entries == null || TopPlayersBoard.Entries.Length == 0)
+                {
+                    <div style="text-align: center; color: #ff9800; font-size: 14px; padding: 20px 0;">
+                        No players yet! Be the first!
+                    </div>
+                }
+                else
+                {
+                    @foreach (var entry in TopPlayersBoard.Entries)
+                    {
+                        string color = "#888";
+                        string fontSize = "16px";
+
+                        if (entry.Rank == 1) { color = "#ff9800"; fontSize = "18px"; }
+                        else if (entry.Rank == 2) { color = "#ccc"; fontSize = "16px"; }
+                        else if (entry.Rank == 3) { color = "#cd7f32"; fontSize = "16px"; }
+
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; align-items: center; padding: 5px 0;">
+                            <span style="color: @color; font-size: @fontSize;">@(entry.Rank). @(entry.DisplayName)</span>
+                            <span class="history-win" style="font-size: @fontSize;">$ @(((decimal)entry.Value).ToString("0.00"))</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="shop-container" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 0;">
+            <div class="shop-title">History</div>
+            <div class="history-log" style="padding-right: 5px;">
+                @foreach (var log in TicketHistory.AsEnumerable().Reverse().Take(15))
+                {
+                    <div class="@(log.Amount > 0 ? "history-win" : (log.Amount < 0 ? "history-buy" : "history-loss"))">
+                        @log.Message
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+</root>

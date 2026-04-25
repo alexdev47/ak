@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "editor": {
+      "type": "sse",
+      "url": "http://localhost:8098/sse"
+    },
+    "api": {
+      "command": "node",
+      "args": ["path/to/Arenula-MCP/api/dist/index.js"],
+      "env": {
+        "SBOX_API_URL": "https://cdn.sbox.game/releases/2026-04-04-08-54-59.zip.json"
+      }
+    },
+    "docs": {
+      "command": "node",
+      "args": ["path/to/Arenula-MCP/docs/dist/index.js"]
+    }
+  }
+}

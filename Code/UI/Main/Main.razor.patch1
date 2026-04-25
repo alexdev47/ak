@@ -1,0 +1,24 @@
+                <div class="shop-item">
+                    <div class="item-info">
+                        <div class="item-title">Аутоскретчер</div>
+                        <div class="item-desc">Стирает билеты за вас</div>
+                    </div>
+                    <div class="buy-btn @(Money < 300m || HasAutoScratcher ? "disabled" : "")"
+                         onclick=@(() => BuyUpgrade("Auto Scratcher", 300m))>
+                        @(HasAutoScratcher ? "Куплено" : "$ 300")
+                    </div>
+                </div>
+
+                @if (HasAutoScratcher)
+                {
+                    <div class="shop-item">
+                        <div class="item-info">
+                            <div class="item-title">Скорость Аутоскретчера @(ScratcherSpeedLevel)</div>
+                            <div class="item-desc">Стирает быстрее</div>
+                        </div>
+                        <div class="buy-btn @(Money < ScratcherSpeedCost ? "disabled" : "")"
+                             onclick=@(() => BuyUpgrade("Scratcher Speed", ScratcherSpeedCost))>
+                            $ @ScratcherSpeedCost.ToString("0")
+                        </div>
+                    </div>
+                }
